@@ -30,38 +30,69 @@ export type UserProfile = {
     splitAcross: string[]; // array of participantIds
   };
   
-  export type Expense = {
+  export type ExpenseStatus = "pending" | "settled";
+
+  export type ExpenseSummary = {
     id: string;
     groupId: string | null;
-    groupName?: string | null; // denormalized
+    groupName?: string | null;
+
     description: string;
     totalAmount: number;
+    currency: string;
+
+    paidBy: string; // uid
+    payerName?: string | null;
+
+    status: ExpenseStatus;
+    participantCount: number;
+
+    date: string; // "YYYY-MM-DD"
+    createdAt: string; // ISO string
+  };
+
+  export type ExpenseTransaction = {
+    id: string;
+
+    expenseId: string; // parent summary id
+    version: number; // start at 1
+
     subtotal: number;
     tax: number;
     tip: number;
-    currency: string;
-    paidBy: string; // uid
-    transactionType: TransactionType; // "they_owe_me" | "i_owe_them"
-    splits: Split[]; // array of participant splits
+
     splitMethod: SplitMethod;
-    itemizedItems?: ItemizedItem[] | null; // only if splitMethod = "itemized"
+    splits: Split[];
+    itemizedItems?: ItemizedItem[] | null;
+
+    createdBy: string; // uid
     createdAt: string; // ISO string
-    date: string; // ISO date string (Dec 7, 2025 → 2025-12-07)
   };
-  
+
+  export type ExpenseView = {
+    summary: ExpenseSummary;
+    latestTransaction: ExpenseTransaction | null;
+  };
+
   export type CreateExpenseInput = {
     groupId?: string | null;
     groupName?: string | null;
+
     description: string;
     totalAmount: number;
+    currency: string;
+
+    paidBy: string;
+    payerName?: string | null;
+
+    status?: ExpenseStatus; // default "pending"
+    date: string;
+
     subtotal: number;
     tax: number;
     tip: number;
-    currency: string;
-    paidBy: string; // uid
-    transactionType: "they_owe_me" | "i_owe_them";
+
+    splitMethod: SplitMethod;
     splits: Split[];
-    splitMethod: "equal" | "itemized" | "custom" | "percentage";
     itemizedItems?: ItemizedItem[] | null;
-    date: string; // ISO date string
   };

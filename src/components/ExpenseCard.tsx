@@ -1,8 +1,8 @@
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-import type { Expense } from "@/src/types/models";
+import type { ExpenseSummary } from "@/src/types/models";
 
 type Props = {
-  expense: Expense;
+  expense: ExpenseSummary;
   onPress?: () => void;
 };
 
@@ -13,12 +13,11 @@ export function ExpenseCard({ expense, onPress }: Props) {
   const year = date.getFullYear();
 
   const groupLabel = expense.groupName ?? "Personal";
-  const peopleCount = expense.splits?.length ?? 1;
+  const peopleCount = expense.participantCount;
   const perPerson =
     peopleCount > 0 ? expense.totalAmount / peopleCount : expense.totalAmount;
 
-  // Temporary status until you add a real field
-  const status = "pending" as const;
+  const status = expense.status;
 
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.8}>

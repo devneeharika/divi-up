@@ -7,38 +7,40 @@ import { Image } from "expo-image";
 import { auth } from "@/src/services/firebase";
 import { useAuthStore } from "@/src/store/authStore";
 import { signInAnonymously, signOut } from "firebase/auth";
-import { Expense } from "@/src/types/models";
+import { ExpenseSummary } from "@/src/types/models";
 import { ExpenseCard } from "@/src/components/ExpenseCard";
 import {
-  createExpense,
-  listExpensesForUser,
+  createExpenseWithTransaction,
+  listExpenseSummariesForUser,
 } from "@/src/services/firestore";
 
 export default function HomeScreen() {
   const user = useAuthStore((state) => state.user);
   const initializing = useAuthStore((state) => state.initializing);
 
-  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [expenses, setExpenses] = useState<ExpenseSummary[]>([]);
   const [loadingExpenses, setLoadingExpenses] = useState(false);
 
   const handleAddTestExpense = async () => {
     if (!user?.uid) return;
 
-    console.log("[TestExpense] start create");  // debug
     try {
       setLoadingExpenses(true);
 
-      await createExpense({
+      await createExpenseWithTransaction({
         groupId: null,
         groupName: null,
         description: "Test dinner",
         totalAmount: 130,
+        currency: "USD",
+        paidBy: user.uid,
+        payerName: user.email ?? "Me",
+        status: "pending",
+        date: new Date().toISOString().slice(0, 10),
+
         subtotal: 107,
         tax: 8,
         tip: 15,
-        currency: "USD",
-        paidBy: user.uid,
-        transactionType: "they_owe_me",
         splitMethod: "equal",
         splits: [
           {
@@ -49,16 +51,10 @@ export default function HomeScreen() {
           },
         ],
         itemizedItems: null,
-        date: new Date().toISOString().slice(0, 10),
       });
 
-      console.log("[TestExpense] created, fetching list");
-
-      const fresh = await listExpensesForUser(user.uid);
-      console.log("[TestExpense] fetched", fresh.length, "expenses");
+      const fresh = await listExpenseSummariesForUser(user.uid);
       setExpenses(fresh);
-    } catch (e) {
-      console.error("[TestExpense] error", e);
     } finally {
       setLoadingExpenses(false);
     }
@@ -73,15 +69,14 @@ export default function HomeScreen() {
       return;
     }
 
+    console.log("[Expenses] have user, loading for", user.uid);
+
     const fetchInitial = async () => {
-      console.log("[Expenses] fetchInitial for", user.uid);
+      if (!user?.uid) return;
       setLoadingExpenses(true);
       try {
-        const fresh = await listExpensesForUser(user.uid);
-        console.log("[Expenses] initial count", fresh.length);
+        const fresh = await listExpenseSummariesForUser(user.uid);
         setExpenses(fresh);
-      } catch (e) {
-        console.error("[Expenses] error", e);
       } finally {
         setLoadingExpenses(false);
       }
